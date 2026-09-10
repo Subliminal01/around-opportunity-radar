@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Around — Discover Delhi NCR",
-  description: "Refresh your view of Delhi NCR. Find upcoming experiences, nearest first, with current source listings.",
+  title: "Around — Opportunities Worth Knowing About",
+  description: "A personal shortlist of unusual work, funded experiences and exceptional opportunities, with source evidence and eligibility checks.",
   other: {
     "codex-preview": "development",
   },
@@ -24,3 +24,4 @@ export default function RootLayout({
     </html>
   );
 }
+
