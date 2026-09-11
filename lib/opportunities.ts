@@ -11,3 +11,11 @@ export function qualifiesHalfPrice(deal:TripQuote,usual:TripQuote,now=Date.now()
  return sum(usual)>0&&sum(deal)<=sum(usual)*0.5;
 }
 export function eligibleNow(o:Opportunity,now=Date.now()){return !o.deadline||Date.parse(o.deadline)>now;}
+export const categories=[
+ {id:'education',label:'Education',title:'Education & research',description:'Funded degrees, fellowships and research placements with a clear benefit.',empty:'Funded opportunities will appear here when the source facts and application window check out.'},
+ {id:'jobs',label:'Jobs & remote',title:'Jobs & remote work',description:'Work with meaningful pay, flexibility or an unusual experience, matched to your skills.',empty:'No current work opportunity passed the checks. We will not substitute ordinary listings.'},
+ {id:'vacations',label:'Vacations',title:'Exceptional vacations',description:'At least 50% less than the documented usual total cost of the same trip from Delhi.',empty:'Live flight and hotel pricing are not connected yet. No trip is claimed to meet your half-price rule. Funded study and research belong under Education.'},
+ {id:'events',label:'Events & competitions',title:'Unique events & competitions',description:'Unusual hands-on experiences, selective gatherings and worthwhile challenges.',empty:'No verified unique event or competition is connected yet. Ordinary ticketed shows are not used as filler.'}
+] as const;
+export type Category=(typeof categories)[number]['id'];
+export function categoryOf(o:Pick<Opportunity,'kind'>):Category{if(/research|study|education|fellowship/i.test(o.kind))return 'education';if(/work|job|remote/i.test(o.kind))return 'jobs';if(/vacation|holiday|travel deal/i.test(o.kind))return 'vacations';return 'events';}
