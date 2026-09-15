@@ -2,9 +2,11 @@ import type {Feed,Opportunity,SourceStatus} from './opportunities';
 import {eligibleNow} from './opportunities';
 import {reviewed} from './reviewed-opportunities';
 import {expanded} from './expanded-opportunities';
-const collection=[...reviewed,...expanded];
+import {world} from './world-opportunities';
+import {discoverCamps} from './camp-discovery';
+const collection=[...reviewed,...expanded,...world];
 export function plain(html:string){return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/&#0?39;|&apos;|&#8217;/g,"'").replace(/&quot;/g,'"').replace(/&#8211;|&ndash;/g,'–').replace(/&#8212;|&mdash;/g,'—').replace(/&#36;/g,'$').replace(/\s+/g,' ').trim();}
-async function textPage(url:string){const r=await fetch(url,{cache:'no-store',headers:{Accept:'text/html','User-Agent':'AroundOpportunityReader/2.0'},signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Source unavailable');const t=await r.text();if(t.length>3000000)throw Error('Source too large');return plain(t);}
+async function textPage(url:string){const r=await fetch(url,{cache:'no-store',headers:{Accept:'text/html','User-Agent':'AroundOpportunityReader/2.0'},signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Source unavailable');const t=await r.text();if(t.length>3000000)throw Error('Source too large');const body=plain(t);if(/Request unsuccessful.*Incapsula|Just a moment|Access Denied|verify you are human/i.test(body))throw Error('Automated access blocked');return body;}
 export function matchesEvidence(text:string,patterns:RegExp[]){return !/this (?:job|position) (?:is no longer|has been filled)|no longer accepting applications|applications (?:are now|have) closed/i.test(text)&&patterns.every(p=>p.test(text));}
 export type RemoteJob={id:number;title:string;company_name:string;candidate_required_location:string;salary:string;description:string;publication_date:string;url:string;tags?:string[]};
 export function matchRemote(j:RemoteJob,checkedAt:string):Opportunity|null{
@@ -35,12 +37,19 @@ async function remoteData(){
  return {jobs:data.jobs,checkedAt:new Date(now).toISOString(),cached:false};
 }
 export async function discover():Promise<Feed>{
+ const campCheck=discoverCamps();
  const now=new Date().toISOString();const requests=new Map<string,Promise<string>>();
  const get=(url:string)=>{if(!requests.has(url))requests.set(url,textPage(url));return requests.get(url)!;};
  const checked=await Promise.allSettled(collection.map(async item=>{
   if(!eligibleNow({...item,checkedAt:now,verification:'official'}))return {item:null,status:{name:item.organisation,url:item.url,ok:true,count:0,checkedAt:now,note:'Application deadline has passed.'} satisfies SourceStatus};
   let facts:boolean[];
-  try {facts=await Promise.all(item.checks.map(async c=>matchesEvidence(await get(c.url),c.patterns)));}
+  try {
+   const results=await Promise.allSettled(item.checks.map(async c=>matchesEvidence(await get(c.url),c.patterns)));
+   // A confirmed contradiction takes precedence over another source being offline.
+   if(results.some(r=>r.status==='fulfilled'&&!r.value))facts=[false];
+   else if(results.some(r=>r.status==='rejected'))throw Error('Source unavailable');
+   else facts=[true];
+  }
   catch(error){
    const reviewedTime=Date.parse(item.reviewedAt+'T00:00:00Z');
    if(!item.allowReviewedFallback||Date.now()-reviewedTime>14*86400000||Date.now()<reviewedTime)throw error;
@@ -53,6 +62,7 @@ export async function discover():Promise<Feed>{
  const opportunities:Opportunity[]=[],sources:SourceStatus[]=[];
  checked.forEach((r,i)=>{if(r.status==='fulfilled'){if(r.value.item)opportunities.push(r.value.item);sources.push(r.value.status);}else sources.push({name:collection[i].organisation,url:collection[i].url,ok:false,count:0,checkedAt:null,note:'Source unavailable. Lead withheld.'});});
  try{const d=await remoteData();const matches=d.jobs.map(j=>matchRemote(j,d.checkedAt)).filter((o):o is Opportunity=>!!o);opportunities.push(...matches);sources.push({name:'Remotive',url:'https://remotive.com/',ok:true,count:matches.length,checkedAt:d.checkedAt,note:`${d.jobs.length} listings screened. Feed reused for up to 6 hours; publisher data is delayed 24 hours.`});}catch{sources.push({name:'Remotive',url:'https://remotive.com/',ok:false,count:0,checkedAt:null,note:'Job feed unavailable.'});}
+ const camp=await campCheck;if(camp.item)opportunities.push(camp.item);sources.push(camp.status);
  const unique=[...new Map(opportunities.map(o=>[(o.organisation+' '+o.title).toLowerCase(),o])).values()].sort((a,b)=>b.rank-a.rank);
  return {checkedAt:now,opportunities:unique,sources,travel:{connected:false,qualifiedCount:0,note:'Live airfare and hotel pricing are not connected. No holiday is claimed to meet your 50% saving rule.'}};
 }

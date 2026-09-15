@@ -12,6 +12,9 @@ export function qualifiesHalfPrice(deal:TripQuote,usual:TripQuote,now=Date.now()
 }
 export function eligibleNow(o:Opportunity,now=Date.now()){if(o.verification==='reviewed'&&now-Date.parse(o.reviewedAt+'T00:00:00Z')>14*86400000)return false;return !o.deadline||Date.parse(o.deadline)>now;}
 export const categories=[
+ {id:'world',label:'World experiences',title:'Experiences worth travelling for',description:'Unusual participatory experiences. Published activity fees are separate from the full trip cost; these are not verified half-price holidays.',empty:'No world experience cleared the source checks.'},
+ {id:'access',label:'Travel access',title:'Travel doors open to an Indian passport',description:'Visa concessions and easier entry, with the paperwork still required. An entry concession is not permission to work or a trip discount.',empty:'No travel concession cleared the source checks.'},
+ {id:'abroad',label:'Live abroad',title:'A different place to live for a while',description:'Conditional residence and remote-work routes. These require your own qualifying income and documents; they are not job offers.',empty:'No living-abroad route cleared the source checks.'},
  {id:'events',label:'Experiences',title:'Things you can be part of',description:'Participatory experiences and cultural encounters in Delhi NCR and beyond.',empty:'No current experience cleared the checks.'},
  {id:'challenges',label:'Build & contribute',title:'Build, collaborate and contribute',description:'Hands-on challenges and opportunities to develop ideas with other people.',empty:'No current challenge cleared the checks.'},
  {id:'creative',label:'Creative & prizes',title:'A different use for your creativity',description:'Photography, design, film and original ideas with a concrete reward or audience.',empty:'No current creative opportunity cleared the checks.'},

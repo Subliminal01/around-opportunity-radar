@@ -2,7 +2,7 @@ import type {Reviewed} from './reviewed-opportunities';
 const day='2026-09-11';
 function entry(o:Omit<Reviewed,'reviewedAt'|'evidence'|'checks'> & {patterns:RegExp[];extra?:Reviewed['checks'];evidence?:Reviewed['evidence']}):Reviewed{
  const {patterns,extra,evidence,...rest}=o;
- return {...rest,reviewedAt:day,evidence:evidence||[{label:'Organizer details & rules',url:o.url}],checks:[{url:o.url,patterns},...(extra||[])]};
+ return {allowReviewedFallback:true,...rest,reviewedAt:day,evidence:evidence||[{label:'Organizer details & rules',url:o.url}],checks:[{url:o.url,patterns},...(extra||[])]};
 }
 const creative={kind:'Creative competition',category:'creative' as const,location:'Online · enter from India',fitLabel:'Open creative challenge · interest-dependent',fit:'You can enter as an Indian citizen. This needs original creative work; your technical skills alone do not establish design ability.',commitment:'Create and submit original work',deadline:'2026-09-30T18:15:00Z',deadlineLabel:'30 Sep 2026 · 11:45 pm IST',rank:72};
 export const expanded:Reviewed[]=[
