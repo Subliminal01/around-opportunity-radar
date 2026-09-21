@@ -63,7 +63,7 @@ export async function discover():Promise<Feed>{
  const opportunities:Opportunity[]=[],sources:SourceStatus[]=[];
  checked.forEach((r,i)=>{if(r.status==='fulfilled'){if(r.value.item)opportunities.push(r.value.item);sources.push(r.value.status);}else sources.push({name:collection[i].organisation,url:collection[i].url,ok:false,count:0,checkedAt:null,note:'Source unavailable. Lead withheld.'});});
  try{const d=await remoteData();const matches=d.jobs.map(j=>matchRemote(j,d.checkedAt)).filter((o):o is Opportunity=>!!o);opportunities.push(...matches);sources.push({name:'Remotive',url:'https://remotive.com/',ok:true,count:matches.length,checkedAt:d.checkedAt,note:`${d.jobs.length} listings screened. Feed reused for up to 6 hours; publisher data is delayed 24 hours.`});}catch{sources.push({name:'Remotive',url:'https://remotive.com/',ok:false,count:0,checkedAt:null,note:'Job feed unavailable.'});}
- const music=await musicCheck;if(music.item)opportunities.push(music.item);sources.push(music.status);
- const unique=[...new Map(opportunities.map(o=>[(o.organisation+' '+o.title).toLowerCase(),o])).values()].sort((a,b)=>b.rank-a.rank);
+ const music=await musicCheck;opportunities.push(...music.items);sources.push(music.status);
+ const unique=[...new Map(opportunities.map(o=>[o.url,o])).values()].sort((a,b)=>b.rank-a.rank);
  return {checkedAt:now,opportunities:unique,sources,travel:{connected:false,qualifiedCount:0,note:'Live airfare and hotel pricing are not connected. No trip currently has evidence for both a total cost of ₹50,000 or less and at least 50% savings. Ordinary overseas activities, visa-only concessions and unconfirmed residence routes are excluded.'}};
 }

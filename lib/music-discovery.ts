@@ -11,9 +11,20 @@ export function upcomingMusic(html:string,now=Date.now()){
   return [{title:clean(title),url,venue:clean(venue),start,label:`${date[1]}/${date[2]} · ${time[1]}:${time[2]} ${time[3]} IST`}];
  }).filter((c,i,a)=>a.findIndex(x=>x.url===c.url)===i).sort((a,b)=>a.start-b.start);
 }
-export async function discoverMusic():Promise<{item:Opportunity|null;status:SourceStatus}>{
+export async function discoverMusic():Promise<{items:Opportunity[];status:SourceStatus}>{
  const checkedAt=new Date().toISOString(),base={name:'The Piano Man · live calendar',url:URL,checkedAt};
- try{const r=await fetch(URL,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();const html=await r.text();if(html.length>3000000)throw Error();const shows=upcomingMusic(html).slice(0,5);if(!shows.length)throw Error();
- return {status:{...base,ok:true,count:1,note:`${shows.length} upcoming performances grouped in one calendar card. New dates are discovered on refresh; ticket inventory and prices are not verified.`},item:{id:'pianoman-upcoming',category:'events',title:'Find your next intimate live-music evening',organisation:'The Piano Man',kind:'Watch & attend · live music calendar',location:'Safdarjung / Saket / Gurugram · Delhi NCR',value:'Ticket prices and food charges: check each show',why:'A live organizer calendar matched to your music and concert interests. New performances can appear when you refresh.',fit:'These are audience bookings, not open-mic performer slots. Choose an artist and venue from the upcoming dates below.',fitLabel:'Matches music & concerts',commitment:shows.map(s=>s.title+' · '+s.label).join(' | '),deadline:new Date(shows[0].start).toISOString(),deadlineLabel:'Next seating: '+shows[0].label+' · refresh for later dates',uncertainties:'Listings do not guarantee seats. Check ticket price, taxes, food minimums, age rules and cancellation terms before paying. Seating time may differ from show start.',rank:96,url:URL,evidence:shows.map(s=>({label:s.title+' · '+s.venue+' · '+s.label,url:s.url})),checkedAt,reviewedAt:checkedAt.slice(0,10),verification:'official'}};
- }catch{return {item:null,status:{...base,ok:false,count:0,checkedAt:null,note:'No upcoming calendar details confirmed. No old dates are presented as current.'}};}
+ try{
+  const r=await fetch(URL,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();
+  const html=await r.text();if(html.length>3000000)throw Error();const shows=upcomingMusic(html);if(!shows.length)throw Error();
+  const items:Opportunity[]=shows.map(s=>({
+   id:'pianoman-'+s.url.split('/').filter(Boolean).pop(),category:'events',title:s.title,organisation:'The Piano Man',kind:'Watch & attend · live music',
+   location:s.venue+' · Delhi NCR',value:'Ticket prices and food charges: check this show',
+   why:'A dated live-music performance in Delhi NCR, matched to your music and concert interests.',
+   fit:'An audience booking, not an open-mic performer slot. Check the artist, venue and ticket terms before deciding.',fitLabel:'Matches music & concerts',
+   commitment:'Seating: '+s.label,deadline:new Date(s.start).toISOString(),deadlineLabel:s.label,
+   uncertainties:'Calendar listing does not guarantee seats. Ticket price, taxes, food minimums, age rules and cancellation terms are unverified. Seating time may differ from show start.',
+   rank:96,url:s.url,evidence:[{label:'Organizer show details',url:s.url},{label:'Live organizer calendar',url:URL}],checkedAt,reviewedAt:checkedAt.slice(0,10),verification:'official'
+  }));
+  return {items,status:{...base,ok:true,count:items.length,note:items.length+' distinct upcoming performances found on the organizer calendar. Ticket inventory and prices are not verified.'}};
+ }catch{return {items:[],status:{...base,ok:false,count:0,checkedAt:null,note:'No upcoming calendar details confirmed. No old dates are presented as current.'}};}
 }
