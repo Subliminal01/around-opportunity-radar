@@ -1,6 +1,6 @@
 import type {Opportunity} from './opportunities';
 
-export const batchSize=12;
+export const batchSize=36;
 function keys(o:Opportunity){
  const url=new URL(o.url);url.hash='';
  for(const key of [...url.searchParams.keys()])if(/^utm_|^fbclid$|^gclid$/i.test(key))url.searchParams.delete(key);

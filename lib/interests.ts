@@ -1,8 +1,9 @@
 import type {Opportunity} from './opportunities';
-export const interests=['Open mics','Acting & theatre','Singing','Music & concerts','Books','Chess','Cricket','Table tennis','Trekking & hiking','Travel','Food','Social connections'] as const;
+export const interests=['Runs & fitness','Volunteering','Making & crafts','Open mics','Acting & theatre','Singing','Music & concerts','Books','Chess','Cricket','Table tennis','Trekking & hiking','Travel','Food','Social connections'] as const;
 export type Interest=typeof interests[number];
 const rules:Record<Interest,RegExp>={
- 'Open mics':/open.?mic/i,'Acting & theatre':/acting|theatre|theater|quijote|improv/i,Singing:/singing|vocal|karaoke|open.?mic/i,'Music & concerts':/music|concert|jazz|singing|sufi/i,Books:/books?|reading|djinns/i,Chess:/chess/i,Cricket:/cricket/i,'Table tennis':/table tennis/i,'Trekking & hiking':/trek|hiking|hike|forest|nature walk/i,Travel:/travel|trip|vacation/i,Food:/food|culinary|cooking|picnic/i,'Social connections':/social|community|meetup|workshop|book.club|open.?mic|chess|group/i
+ 'Runs & fitness':/run|5k|10k|climb|boulder|cycling/i,Volunteering:/volunteer|goonj|robin hood/i,'Making & crafts':/pottery|ceramic|workshop|cyanotype/i,
+ 'Open mics':/open.?mic/i,'Acting & theatre':/acting|theatre|theater|quijote|improv/i,Singing:/singing|vocal|karaoke|open.?mic/i,'Music & concerts':/music|concert|jazz|singing|sufi/i,Books:/books?|reading|djinns/i,Chess:/chess/i,Cricket:/cricket/i,'Table tennis':/table tennis/i,'Trekking & hiking':/trek|hiking|hike|forest|nature walk/i,Travel:/travel|trip|vacation/i,Food:/food|culinary|cooking|picnic|buffet|cake|dining/i,'Social connections':/social|community|meetup|workshop|book.club|open.?mic|chess|group/i
 };
 export function interestsFor(o:Pick<Opportunity,'title'|'kind'|'why'|'id'>):Interest[]{
  const text=[o.title,o.kind,o.why].join(' ');return interests.filter(i=>rules[i].test(text));

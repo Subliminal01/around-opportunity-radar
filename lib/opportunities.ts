@@ -1,5 +1,5 @@
 export type Evidence={label:string;url:string};
-export type Opportunity={id:string;title:string;organisation:string;kind:string;category?:Category;location:string;value:string;why:string;fit:string;uncertainties:string;commitment:string;deadline:string|null;deadlineLabel:string;fitLabel:string;rank:number;url:string;evidence:Evidence[];checkedAt:string;reviewedAt:string;verification:'official'|'listing'|'reviewed';tripComparison?:{deal:TripQuote;usual:TripQuote};publishedAt?:string};
+export type Opportunity={experienceType?:'dated'|'ongoing'|'offer';weekend?:'yes'|'confirm'|'leave';id:string;title:string;organisation:string;kind:string;category?:Category;location:string;value:string;why:string;fit:string;uncertainties:string;commitment:string;deadline:string|null;deadlineLabel:string;fitLabel:string;rank:number;url:string;evidence:Evidence[];checkedAt:string;reviewedAt:string;verification:'official'|'listing'|'reviewed';tripComparison?:{deal:TripQuote;usual:TripQuote};publishedAt?:string};
 export type SourceStatus={name:string;url:string;ok:boolean;count:number;checkedAt:string|null;note:string};
 export type Feed={checkedAt:string;opportunities:Opportunity[];sources:SourceStatus[];travel:{connected:boolean;qualifiedCount:number;note:string}};
 export type TripQuote={currency:string;departureAirport:string;destination:string;start:string;end:string;travellers:number;flightClass:string;hotelStandard:string;components:{flights:number;stay:number;visa:number;baggage:number;transfers:number;fees:number;food:number;insurance:number};sourceUrl:string;checkedAt:string};
@@ -20,11 +20,18 @@ export function feasibleForYou(o:Pick<Opportunity,'kind'|'category'|'location'|'
   const q=o.tripComparison;
   return !!q&&q.deal.currency==='INR'&&q.deal.departureAirport==='DEL'&&q.deal.travellers===1&&Date.parse(q.deal.start)>now&&Date.parse(q.deal.end)>=Date.parse(q.deal.start)&&qualifiesHalfPrice(q.deal,q.usual,now)&&Object.values(q.deal.components).reduce((a,b)=>a+b,0)<=travelBudgetINR;
  }
- if(c==='events')return /Delhi|NCR|Noida|Gurugram|Gurgaon|Faridabad|Ghaziabad|online|virtual/i.test(o.location);
+ if(c==='domestic')return /India/i.test(o.location);
+ if(['events','food','sports','outdoors','social','workshops'].includes(c))return /Delhi|NCR|Noida|Gurugram|Gurgaon|Faridabad|Ghaziabad|online|virtual/i.test(o.location);
  return true;
 }
 export function eligibleNow(o:Opportunity,now=Date.now()){if(o.verification==='reviewed'&&now-Date.parse(o.reviewedAt+'T00:00:00Z')>14*86400000)return false;return !o.deadline||Date.parse(o.deadline)>now;}
 export const categories=[
+ {id:'sports',label:'Runs & sports',title:'Move, play and meet people',description:'Beginner to moderate activity. Choose your distance and confirm any training or equipment requirements.',empty:'No current sports option passed the checks.'},
+ {id:'food',label:'Food & offers',title:'Food worth going out for',description:'Tastings, food walks and conditional dining deals. A free extra is not a free meal; read the total cost and conditions.',empty:'No food offer passed the checks.'},
+ {id:'outdoors',label:'Outdoors',title:'Explore beyond your usual route',description:'Local walks, cycling and manageable outdoor experiences. Check weather, distance and the next weekend slot.',empty:'No outdoor experience passed the checks.'},
+ {id:'workshops',label:'Try something',title:'Make, perform and experiment',description:'Beginner-friendly creative experiences with a concrete way to participate.',empty:'No workshop passed the checks.'},
+ {id:'social',label:'Meet people',title:'Go solo, find your people',description:'Reading, chess and volunteering communities. Ongoing programmes require confirmation of the next session.',empty:'No community experience passed the checks.'},
+ {id:'domestic',label:'India getaways',title:'Domestic group escapes',description:'Travel within India, with total cost and departure dates to confirm. These are not verified half-price deals; some require leave.',empty:'No domestic trip passed the checks.'},
  {id:'world',label:'World experiences',title:'Experiences worth travelling for',description:'Unusual participatory experiences. Published activity fees are separate from the full trip cost; these are not verified half-price holidays.',empty:'No world experience cleared the source checks.'},
  {id:'access',label:'Travel access',title:'Travel doors open to an Indian passport',description:'Visa concessions and easier entry, with the paperwork still required. An entry concession is not permission to work or a trip discount.',empty:'No travel concession cleared the source checks.'},
  {id:'abroad',label:'Live abroad',title:'A different place to live for a while',description:'Conditional residence and remote-work routes. These require your own qualifying income and documents; they are not job offers.',empty:'No living-abroad route cleared the source checks.'},

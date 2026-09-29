@@ -15,9 +15,9 @@ export async function discoverMusic():Promise<{items:Opportunity[];status:Source
  const checkedAt=new Date().toISOString(),base={name:'The Piano Man · live calendar',url:URL,checkedAt};
  try{
   const r=await fetch(URL,{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();
-  const html=await r.text();if(html.length>3000000)throw Error();const shows=upcomingMusic(html);if(!shows.length)throw Error();
+  const html=await r.text();if(html.length>3000000)throw Error();const shows=upcomingMusic(html).filter(s=>[0,6].includes(new Date(s.start+330*60000).getUTCDay()));if(!shows.length)throw Error();
   const items:Opportunity[]=shows.map(s=>({
-   id:'pianoman-'+s.url.split('/').filter(Boolean).pop(),category:'events',title:s.title,organisation:'The Piano Man',kind:'Watch & attend · live music',
+   id:'pianoman-'+s.url.split('/').filter(Boolean).pop(),category:'events',experienceType:'dated',weekend:'yes',title:s.title,organisation:'The Piano Man',kind:'Watch & attend · live music',
    location:s.venue+' · Delhi NCR',value:'Ticket prices and food charges: check this show',
    why:'A dated live-music performance in Delhi NCR, matched to your music and concert interests.',
    fit:'An audience booking, not an open-mic performer slot. Check the artist, venue and ticket terms before deciding.',fitLabel:'Matches music & concerts',

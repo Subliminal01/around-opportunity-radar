@@ -4,8 +4,9 @@ import {reviewed} from './reviewed-opportunities';
 import {expanded} from './expanded-opportunities';
 import {world} from './world-opportunities';
 import {localInterests} from './local-interests';
+import {weekendExperiences} from './weekend-experiences';
 import {discoverMusic} from './music-discovery';
-const collection=[...localInterests,...reviewed,...expanded,...world].filter(o=>feasibleForYou(o));
+const collection=[...weekendExperiences,...localInterests,...reviewed,...expanded,...world].filter(o=>feasibleForYou(o));
 export function plain(html:string){return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/&#0?39;|&apos;|&#8217;/g,"'").replace(/&quot;/g,'"').replace(/&#8211;|&ndash;/g,'–').replace(/&#8212;|&mdash;/g,'—').replace(/&#36;/g,'$').replace(/\s+/g,' ').trim();}
 async function textPage(url:string){const r=await fetch(url,{cache:'no-store',headers:{Accept:'text/html','User-Agent':'AroundOpportunityReader/2.0'},signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Source unavailable');const t=await r.text();if(t.length>3000000)throw Error('Source too large');const body=plain(t);if(/Request unsuccessful.*Incapsula|Just a moment|Access Denied|verify you are human/i.test(body))throw Error('Automated access blocked');return body;}
 export function matchesEvidence(text:string,patterns:RegExp[]){return !/this (?:job|position) (?:is no longer|has been filled)|no longer accepting applications|applications (?:are now|have) closed/i.test(text)&&patterns.every(p=>p.test(text));}
